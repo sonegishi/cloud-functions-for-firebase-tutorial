@@ -16,7 +16,7 @@ functions.https.onRequest((request, response) => {
     })
     .then(citySnapshots => {
         const results: (FirebaseFirestore.DocumentData | undefined)[] = []
-        citySnapshots.forEach(citySnap=> {
+        citySnapshots.forEach(citySnap => {
             const data = citySnap.data()
             data!.city = citySnap.id
             results.push(data)
