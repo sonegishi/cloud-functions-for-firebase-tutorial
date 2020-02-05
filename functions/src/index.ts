@@ -2,8 +2,17 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 admin.initializeApp();
 
-// Start writing Firebase Functions
-// https://firebase.google.com/docs/functions/typescript
+export const onBostonWeatherUpdate =
+functions.firestore.document('cities-weather/boston-ma-us').onUpdate(change => {
+    const after = change.after.data()
+    const payload = {
+        data: {
+            temp: String(after.temp),
+            conditions: after.conditions
+        }
+    }
+    return admin.messaging().sendToTopic('weaather_boston-ma-us', payload)
+})
 
 export const getBostonWeather = functions.https.onRequest((request, response) => {
     admin.firestore().doc('cities-weather/boston-ma-us').get()
