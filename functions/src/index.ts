@@ -71,3 +71,19 @@ export const onMessageCreate = functions.database
 function addPizzazz(text: string): string {
     return text.replace(/\bpizza\b/g, '🍕')
 }
+
+export const onMessageUpdate = functions.database
+.ref('rooms/{roommId}/messages/{messageId}')
+.onUpdate((change, context) => {
+    const before = change.before.val()
+    const after = change.after.val()
+
+    if (before.text === after.text) {
+        console.log("Text didn't change")
+        return null
+    }
+
+    const text = addPizzazz(after.text)
+    const timeEdited = Date.now()
+    return change.after.ref.update({ text, timeEdited })
+})
