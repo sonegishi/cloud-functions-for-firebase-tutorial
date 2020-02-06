@@ -57,15 +57,20 @@ functions.https.onRequest(async (request, response) => {
 
 export const onMessageCreate = functions.database
 .ref('rooms/{roommId}/messages/{messageId}')
-.onCreate((snapshot, context) => {
+.onCreate(async (snapshot, context) => {
     const roomId = context.params.roomId
     const messageId = context.params.messageId
     console.log(`New message ${messageId} in room ${roomId}`)
 
     const messageData = snapshot.val()
     const text = addPizzazz(messageData.text)
-    snapshot.ref.update({ text: text })
+    await snapshot.ref.update({ text: text })
     .catch(error => { console.log(error) })
+
+    const countRef = snapshot.ref.parent?.parent?.child('messageCount')
+    return countRef?.transaction(count => {
+        return count + 1
+    })
 })
 
 function addPizzazz(text: string): string {
@@ -86,4 +91,13 @@ export const onMessageUpdate = functions.database
     const text = addPizzazz(after.text)
     const timeEdited = Date.now()
     return change.after.ref.update({ text, timeEdited })
+})
+
+export const onMessageDelete = functions.database
+.ref('rooms/{roommId}/messages/{messageId}')
+.onDelete(async (snapshot, context) => {
+    const countRef = snapshot.ref.parent?.parent?.child('messageCount')
+    return countRef?.transaction(count => {
+        return count - 1
+    })
 })
